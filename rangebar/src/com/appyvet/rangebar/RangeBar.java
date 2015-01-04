@@ -164,6 +164,8 @@ public class RangeBar extends View {
     private int mActiveTickColor;
 
     private int mActiveCircleColor;
+    
+    private boolean mAlwaysShowPin;
 
     // Constructors ////////////////////////////////////////////////////////////
 
@@ -213,6 +215,7 @@ public class RangeBar extends View {
         bundle.putInt("RIGHT_INDEX", mRightIndex);
 
         bundle.putBoolean("FIRST_SET_TICK_COUNT", mFirstSetTickCount);
+        bundle.putBoolean("ALWAYS_SHOW_PIN", mAlwaysShowPin);
 
         return bundle;
     }
@@ -246,6 +249,7 @@ public class RangeBar extends View {
             mLeftIndex = bundle.getInt("LEFT_INDEX");
             mRightIndex = bundle.getInt("RIGHT_INDEX");
             mFirstSetTickCount = bundle.getBoolean("FIRST_SET_TICK_COUNT");
+            mAlwaysShowPin = bundle.getBoolean("ALWAYS_SHOW_PIN");
 
             setRangePinsByIndices(mLeftIndex, mRightIndex);
             super.onRestoreInstanceState(bundle.getParcelable("instanceState"));
@@ -301,10 +305,23 @@ public class RangeBar extends View {
         final float yPos = h - mBarPaddingBottom;
         if (mIsRangeBar) {
             mLeftThumb = new PinView(ctx);
-            mLeftThumb.init(ctx, yPos, 0, mPinColor, mTextColor, mCircleSize, mCircleColor);
+            if (mAlwaysShowPin) {
+                mLeftThumb.init(ctx, yPos, mExpandedPinRadius, mPinColor, mTextColor, 
+                        mCircleSize, mCircleColor);
+            }
+            else {
+                mLeftThumb.init(ctx, yPos, 0, mPinColor, mTextColor, mCircleSize, mCircleColor);
+            }
+            
         }
         mRightThumb = new PinView(ctx);
-        mRightThumb.init(ctx, yPos, 0, mPinColor, mTextColor, mCircleSize, mCircleColor);
+        if (mAlwaysShowPin) {
+            mRightThumb.init(ctx, yPos, mExpandedPinRadius, mPinColor, mTextColor, 
+                    mCircleSize, mCircleColor);
+        }
+        else {
+            mRightThumb.init(ctx, yPos, 0, mPinColor, mTextColor, mCircleSize, mCircleColor);
+        }
 
         // Create the underlying bar.
         final float marginLeft = mExpandedPinRadius;
@@ -641,12 +658,30 @@ public class RangeBar extends View {
     }
 
     /**
-     * Sets pin value 
-     * @param key - pin key
-     * @param value - value of pin
+     * Sets pin value.
+     * @param key - pin key.
+     * @param value - value of pin.
      */
     public void setPinValue(float key, String value) {
         mTickMap.put(key, value);
+    }
+
+    /**
+     * Tells if pin will be hidden on release.
+     * 
+     * @return - true if pin will be hidden, false otherwise.
+     */
+    public boolean isAlwaysShowPin() {
+        return mAlwaysShowPin;
+    }
+
+    /**
+     * Sets pin behaviour on release
+     * 
+     * @param alwaysShowPin - true if pin should be hidden on release, false otherwise
+     */
+    public void setAlwaysShowPin(boolean alwaysShowPin) {
+        this.mAlwaysShowPin = alwaysShowPin;
     }
 
     /**
@@ -953,7 +988,9 @@ public class RangeBar extends View {
                     ta.getDimension(R.styleable.RangeBar_barPaddingBottom,
                             DEFAULT_BAR_PADDING_BOTTOM_DP), getResources().getDisplayMetrics());
             mIsRangeBar = ta.getBoolean(R.styleable.RangeBar_rangeBar, true);
-
+            mAlwaysShowPin = ta.getBoolean(R.styleable.RangeBar_alwaysShowPin,
+                    mAlwaysShowPin);
+            
         } finally {
             ta.recycle();
         }
@@ -998,10 +1035,22 @@ public class RangeBar extends View {
 
         if (mIsRangeBar) {
             mLeftThumb = new PinView(ctx);
-            mLeftThumb.init(ctx, yPos, 0, mPinColor, mTextColor, mCircleSize, mCircleColor);
+            if (mAlwaysShowPin) {
+                mLeftThumb.init(ctx, yPos, mExpandedPinRadius, mPinColor, mTextColor,
+                        mCircleSize, mCircleColor);
+            }
+            else {
+                mLeftThumb.init(ctx, yPos, 0, mPinColor, mTextColor, mCircleSize, mCircleColor);
+            }
         }
         mRightThumb = new PinView(ctx);
-        mRightThumb.init(ctx, yPos, 0, mPinColor, mTextColor, mCircleSize, mCircleColor);
+        if (mAlwaysShowPin) {
+            mRightThumb.init(ctx, yPos, mExpandedPinRadius, mPinColor, mTextColor, 
+                    mCircleSize, mCircleColor);
+        }
+        else {
+            mRightThumb.init(ctx, yPos, 0, mPinColor, mTextColor, mCircleSize, mCircleColor);
+        }
 
         float marginLeft = getMarginLeft();
         float barLength = getBarLength();
@@ -1205,17 +1254,20 @@ public class RangeBar extends View {
         if (mFirstSetTickCount) {
             mFirstSetTickCount = false;
         }
-        ValueAnimator animator = ValueAnimator.ofFloat(0, mExpandedPinRadius);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        if (!mAlwaysShowPin) {
+            ValueAnimator animator = ValueAnimator.ofFloat(0, mExpandedPinRadius);
+            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                mThumbRadiusDP = (Float) (animation.getAnimatedValue());
-                thumb.setSize(mThumbRadiusDP, mPinPadding * animation.getAnimatedFraction());
-                invalidate();
-            }
-        });
-        animator.start();
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    mThumbRadiusDP = (Float) (animation.getAnimatedValue());
+                    thumb.setSize(mThumbRadiusDP, mPinPadding * animation.getAnimatedFraction());
+                    invalidate();
+                }
+            });
+            animator.start(); 
+        }
+        
         thumb.press();
     }
 
@@ -1231,19 +1283,23 @@ public class RangeBar extends View {
         thumb.setX(nearestTickX);
         int tickIndex = mBar.getNearestTickIndex(thumb);
         thumb.setXValue(getPinValue(tickIndex));
-        ValueAnimator animator = ValueAnimator.ofFloat(mExpandedPinRadius, 0);
+        
+        if (!mAlwaysShowPin) {
+            ValueAnimator animator = ValueAnimator.ofFloat(mExpandedPinRadius, 0);
 
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
 
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                mThumbRadiusDP = (Float) (animation.getAnimatedValue());
-                thumb.setSize(mThumbRadiusDP,
-                        mPinPadding - (mPinPadding * animation.getAnimatedFraction()));
-                invalidate();
-            }
-        });
-        animator.start();
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    mThumbRadiusDP = (Float) (animation.getAnimatedValue());
+                    thumb.setSize(mThumbRadiusDP,
+                            mPinPadding - (mPinPadding * animation.getAnimatedFraction()));
+                    invalidate();
+                }
+            });
+            animator.start();
+        }
+        
         thumb.release();
     }
 

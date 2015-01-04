@@ -18,6 +18,7 @@
         <attr name="connectingLineWeight" format="dimension" />
         <attr name="connectingLineColor" format="reference|color" />
         <attr name="pinRadius" format="dimension" />
+        <attr name="alwaysShowPin" format="boolean" />
     </declare-styleable>
 
 </resources>
