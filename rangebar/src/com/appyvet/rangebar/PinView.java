@@ -40,6 +40,9 @@ class PinView extends View {
     // Sets the default values for radius, normal, pressed if circle is to be
     // drawn but no value is given.
     private static final float DEFAULT_THUMB_RADIUS_DP = 14;
+    
+    // Maximum text size
+    private static final int MAX_TEXT_SIZE = 5;
 
     // Member Variables ////////////////////////////////////////////////////////
 
@@ -241,8 +244,8 @@ class PinView extends View {
                     (int) mX + mPinRadiusPx, (int) mY - (int) mPinPadding);
             mPin.setBounds(mBounds);
             String text = mValue;
-            if (mValue.length() > 4) {
-                text = mValue.substring(0, 4);
+            if (mValue.length() > MAX_TEXT_SIZE) {
+                text = mValue.substring(0, MAX_TEXT_SIZE);
             }
             calibrateTextSize(mTextPaint, text, 8, 24, mBounds.width());
             mTextPaint.getTextBounds(text, 0, text.length(), mBounds);
