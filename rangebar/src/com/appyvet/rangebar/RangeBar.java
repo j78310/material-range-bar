@@ -145,7 +145,7 @@ public class RangeBar extends View {
 
     private OnRangeBarChangeListener mListener;
 
-    private HashMap<Float, String> mTickMap;
+    private HashMap<Float, String> mTickMap = new HashMap<Float, String>();;
 
     private int mLeftIndex;
 
@@ -641,6 +641,15 @@ public class RangeBar extends View {
     }
 
     /**
+     * Sets pin value 
+     * @param key - pin key
+     * @param value - value of pin
+     */
+    public void setPinValue(float key, String value) {
+        mTickMap.put(key, value);
+    }
+
+    /**
      * Gets the start tick.
      *
      * @return the start tick.
@@ -879,10 +888,6 @@ public class RangeBar extends View {
      * @param attrs   AttributeSet from the constructor.
      */
     private void rangeBarInit(Context context, AttributeSet attrs) {
-        //TODO tick value map
-        if (mTickMap == null) {
-            mTickMap = new HashMap<Float, String>();
-        }
         TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.RangeBar, 0, 0);
 
         try {
