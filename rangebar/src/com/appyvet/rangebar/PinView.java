@@ -97,13 +97,13 @@ class PinView extends View {
      *
      * @param ctx          Context
      * @param y            The y coordinate to raw the pin (i.e. the bar location)
-     * @param pinRadiusDP  the initial size of the pin
+     * @param pinRadiusPx  the initial size of the pin
      * @param pinColor     the color of the pin
      * @param textColor    the color of the value text in the pin
      * @param circleRadius the radius of the selector circle
      * @param circleColor  the color of the selector circle
      */
-    public void init(Context ctx, float y, float pinRadiusDP, int pinColor, int textColor,
+    public void init(Context ctx, float y, int pinRadiusPx, int pinColor, int textColor,
             float circleRadius, int circleColor) {
         mRes = ctx.getResources();
         mPin = ctx.getResources().getDrawable(R.drawable.rotate);
@@ -115,14 +115,12 @@ class PinView extends View {
                 3.5f, mRes.getDisplayMetrics());
         // If one of the attributes are set, but the others aren't, set the
         // attributes to default
-        if (pinRadiusDP == -1) {
+        if (pinRadiusPx == -1) {
             mPinRadiusPx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                     DEFAULT_THUMB_RADIUS_DP,
                     mRes.getDisplayMetrics());
         } else {
-            mPinRadiusPx = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                    pinRadiusDP,
-                    mRes.getDisplayMetrics());
+            mPinRadiusPx = pinRadiusPx;
         }
         //Set text size in px from dp
         int textSize = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,
